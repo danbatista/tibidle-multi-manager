@@ -1,5 +1,7 @@
 # Tibidle Multi-Manager
 
+[![Baixar para Windows x64 — v1.0.0](https://img.shields.io/badge/Baixar_para_Windows_x64-v1.0.0-0078D4?style=for-the-badge)](https://github.com/danbatista/tibidle-multi-manager/releases/download/v1.0.0/TibidleMultiManager-win-x64.zip)
+
 Aplicativo de comunidade para jogar [Tibidle](https://play.tibidle.com/) no Windows com quatro contas em uma janela. Feito em C#, WPF e Microsoft Edge WebView2.
 
 O código é aberto sob a [licença MIT](LICENSE): você pode usar, estudar, modificar e distribuir sua própria versão. Cada pessoa entra com suas próprias contas diretamente no site do jogo. Não há assinatura ou serviço próprio do gerenciador.
