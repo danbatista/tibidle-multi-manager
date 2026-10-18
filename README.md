@@ -4,6 +4,12 @@ Aplicativo de comunidade para jogar [Tibidle](https://play.tibidle.com/) no Wind
 
 O código é aberto sob a [licença MIT](LICENSE): você pode usar, estudar, modificar e distribuir sua própria versão. Cada pessoa entra com suas próprias contas diretamente no site do jogo. Não há assinatura ou serviço próprio do gerenciador.
 
+## Tela inicial
+
+![Tela inicial do Tibidle Multi-Manager com quatro abas e formulário de login vazio](docs/images/tela-inicial.jpg)
+
+Captura de uma instância de demonstração com perfis novos, sem contas conectadas. Para abrir uma demonstração isolada a partir da pasta do repositório: `dotnet run --project checks/IntegrationChecks.csproj -- --preview`.
+
 ## Recursos
 
 - Quatro abas com perfis de navegador separados.

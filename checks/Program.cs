@@ -16,6 +16,24 @@ internal static class Program
             return;
         }
         var app = new Application();
+        if (args.Contains("--preview"))
+        {
+            // Documentation preview: a fresh data directory, never the user's profiles.
+            var root = Path.Combine(Path.GetTempPath(), "TibidlePreview-" + Guid.NewGuid().ToString("N"));
+            var xaml = System.Xml.Linq.XDocument.Load(Path.Combine("src", "App.xaml"));
+            System.Xml.Linq.XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+            var resources = new System.Xml.Linq.XElement(presentation + "ResourceDictionary",
+                new System.Xml.Linq.XAttribute(System.Xml.Linq.XNamespace.Xmlns + "x", "http://schemas.microsoft.com/winfx/2006/xaml"),
+                xaml.Root!.Element(presentation + "Application.Resources")!.Elements());
+            app.Resources = (ResourceDictionary)System.Windows.Markup.XamlReader.Parse(resources.ToString());
+            app.Run(new MainWindow(new SettingsStore(root))
+            {
+                Title = "Tibidle Multi-Manager — demonstração sem contas",
+                WindowState = WindowState.Normal, Width = 1440, Height = 940,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            });
+            return;
+        }
         if (args.Contains("--order"))
         {
             var root = Path.Combine(Path.GetTempPath(), "TibidleOrder-" + Guid.NewGuid().ToString("N"));

@@ -13,5 +13,7 @@ foreach ($document in @('LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.md')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $document) -Destination $buildOutput
 }
 New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $buildOutput 'docs/images') | Out-Null
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'docs/images/tela-inicial.jpg') -Destination (Join-Path $buildOutput 'docs/images')
 Compress-Archive -Path (Join-Path $buildOutput '*') -DestinationPath $packagePath -Force
 Write-Output "Pacote criado: $packagePath"
