@@ -1,0 +1,91 @@
+# Only project content belongs at the repository root.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/THIRD_PARTY_NOTICES.md
+!/src/
+!/checks/
+!/docs/
+!/build.ps1
+
+# Build output, IDE caches and diagnostics.
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/artifacts/
+**/dist/
+**/publish/
+**/TestResults/
+*.user
+*.suo
+*.pdb
+*.log
+*.dmp
+*.tmp
+*.bak
+*.zip
+*.7z
+*.lnk
+*.url
+.DS_Store
+Thumbs.db
+
+# Private profiles, sessions and local databases, wherever copied.
+**/.tibidle-multi-manager/
+**/BrowserData/
+**/EBWebView/
+**/WV2Profile_*/
+**/User Data/
+**/Local Storage/
+**/Session Storage/
+**/IndexedDB/
+**/Network/
+**/profiles/
+**/sessions/
+**/backups/
+**/private/
+**/personal/
+**/screenshots/
+settings.json
+settings.json.*
+Cookies
+Cookies-*
+History
+History-*
+Login Data*
+Web Data*
+Local State
+Preferences
+Secure Preferences
+*.sqlite
+*.sqlite3
+*.db
+*.db-*
+*.har
+
+# Credentials and machine-local configuration.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+credentials.json
+secrets.json
+appsettings.*.local.json
+NuGet.Config
+nuget.config
+
+# Local assistant notes and conversation artifacts.
+.codex/
+.ai-memory*
+.codegraph/
+AGENTS.md
+CLAUDE.md
+docs/PLAN.md
+codex-clipboard-*
