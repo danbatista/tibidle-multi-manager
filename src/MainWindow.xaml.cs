@@ -58,7 +58,7 @@ public partial class MainWindow : Window
         {
             var index = i;
             var command = new RoutedCommand();
-            CommandBindings.Add(new CommandBinding(command, (_, _) => SelectTab(settings.TabOrder[index])));
+            CommandBindings.Add(new CommandBinding(command, (_, _) => SelectPosition(index)));
             InputBindings.Add(new KeyBinding(command, (Key)((int)Key.D1 + i), ModifierKeys.Control));
         }
         ApplyTabOrder();
@@ -70,9 +70,9 @@ public partial class MainWindow : Window
         try
         {
             environment = await CoreWebView2Environment.CreateAsync(null, Path.Combine(store.Root, "BrowserData"));
-            var firstTab = selected;
-            for (var offset = 0; offset < 4 && !closing; offset++)
-                await InitializeSession((firstTab + offset) % 4);
+            foreach (var index in settings.ActiveOrder.OrderBy(i => i == selected ? 0 : 1).ToArray())
+                await InitializeSession(index);
+            RefreshControls();
         }
         catch (Exception ex)
         {
@@ -85,8 +85,9 @@ public partial class MainWindow : Window
 
     private async Task InitializeSession(int index)
     {
-        if (environment is null || closing || initializing[index]) return;
+        if (environment is null || closing || initializing[index] || !settings.Accounts[index].Active) return;
         initializing[index] = true;
+        RefreshControls();
         try
         {
             sessions[index]?.Dispose();
@@ -114,7 +115,7 @@ public partial class MainWindow : Window
             {
                 if (Keyboard.Modifiers == ModifierKeys.Control && args.Key >= Key.D1 && args.Key <= Key.D4)
                 {
-                    SelectTab(settings.TabOrder[(int)args.Key - (int)Key.D1]);
+                    SelectPosition((int)args.Key - (int)Key.D1);
                     args.Handled = true;
                 }
             };
@@ -144,7 +145,7 @@ public partial class MainWindow : Window
         {
             Title = $"{account.Name} — {uri.Host}", Owner = this,
             Width = 600, Height = 780, WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = Background, Content = browser.View
+            Background = Background, Content = browser.View, Tag = account
         };
         popupWindows.Add(popup);
         popup.Closed += (_, _) => { popupWindows.Remove(popup); browser.Dispose(); };
@@ -172,9 +173,11 @@ public partial class MainWindow : Window
 
     private void SelectTab(int index)
     {
+        if (!settings.ActiveOrder.Contains(index)) index = settings.ActiveOrder.FirstOrDefault(-1);
         selected = index;
         settings.SelectedTab = index;
-        BrowserLayout.Apply(BrowserHost, settings.TabOrder.Select(i => panes[i]).ToArray(), settings.GridView, settings.TabOrder.IndexOf(index));
+        foreach (var pane in panes) pane.Visibility = Visibility.Hidden;
+        BrowserLayout.Apply(BrowserHost, settings.ActiveOrder.Select(i => panes[i]).ToArray(), settings.GridView, settings.ActiveOrder.IndexOf(index));
         for (var i = 0; i < 4; i++)
         {
             tabs[i].Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(i == index ? "#413620" : "#191D25"));
@@ -183,8 +186,45 @@ public partial class MainWindow : Window
             paneHeaders[i].Background = tabs[i].Background;
             paneHeaders[i].BorderBrush = tabs[i].BorderBrush;
         }
-        AccountName.Text = settings.Accounts[index].Name;
+        AccountName.Text = index >= 0 ? settings.Accounts[index].Name : "";
         RefreshControls();
+    }
+
+    private void SelectPosition(int position)
+    {
+        var order = settings.ActiveOrder;
+        if (position < order.Count) SelectTab(order[position]);
+    }
+
+    private void CloseTab(object sender, RoutedEventArgs e)
+    {
+        if (selected < 0 || initializing[selected]) return;
+        var index = selected;
+        var position = settings.ActiveOrder.IndexOf(index);
+        settings.Accounts[index].Active = false;
+        foreach (var popup in popupWindows.Where(w => ReferenceEquals(w.Tag, settings.Accounts[index])).ToArray()) popup.Close();
+        sessions[index]?.Dispose();
+        sessions[index] = null;
+        containers[index].Children.Clear();
+        var remaining = settings.ActiveOrder;
+        ApplyTabOrder();
+        SelectTab(remaining.Count == 0 ? -1 : remaining[Math.Min(position, remaining.Count - 1)]);
+        SaveSettings();
+    }
+
+    private async void AddTab(object sender, RoutedEventArgs e)
+    {
+        if (closing) return;
+        var index = settings.TabOrder.FirstOrDefault(i => !settings.Accounts[i].Active && !initializing[i], -1);
+        if (index < 0) return;
+        settings.Accounts[index].Active = true;
+        settings.TabOrder.Remove(index);
+        settings.TabOrder.Add(index);
+        statuses[index] = "Preparando…";
+        ApplyTabOrder();
+        SelectTab(index);
+        SaveSettings();
+        await InitializeSession(index);
     }
 
     private void ToggleLayout(object sender, RoutedEventArgs e)
@@ -197,9 +237,10 @@ public partial class MainWindow : Window
     private void ApplyTabOrder()
     {
         Tabs.Children.Clear();
-        for (var position = 0; position < settings.TabOrder.Count; position++)
+        var order = settings.ActiveOrder;
+        for (var position = 0; position < order.Count; position++)
         {
-            var account = settings.TabOrder[position];
+            var account = order[position];
             Tabs.Children.Add(tabs[account]);
             tabs[account].ToolTip = $"Arraste para reorganizar • Ctrl+{position + 1}";
         }
@@ -249,7 +290,20 @@ public partial class MainWindow : Window
 
     private void RefreshControls()
     {
+        var hasTab = selected >= 0;
+        AddTabButton.IsEnabled = settings.Accounts.Any(a => !a.Active);
+        CloseTabButton.IsEnabled = hasTab && !initializing[selected];
+        SaveNameButton.IsEnabled = hasTab;
+        AccountName.IsEnabled = hasTab;
+        LayoutButton.IsEnabled = hasTab;
+        EmptyState.Visibility = hasTab ? Visibility.Collapsed : Visibility.Visible;
         LayoutButton.Content = settings.GridView ? "▣  Tela normal" : "▦  4 telas";
+        if (!hasTab)
+        {
+            Status.Text = "Nenhuma conta aberta";
+            SoundButton.IsEnabled = ReloadButton.IsEnabled = false;
+            return;
+        }
         Status.Text = $"{settings.Accounts[selected].Name}  •  {statuses[selected]}";
         SoundButton.Content = settings.Accounts[selected].Muted ? "Som: desligado" : "Som: ligado";
         SoundButton.IsEnabled = sessions[selected]?.Ready == true;
@@ -270,6 +324,7 @@ public partial class MainWindow : Window
 
     private void SaveName(object sender, RoutedEventArgs e)
     {
+        if (selected < 0) return;
         var name = AccountName.Text.Trim();
         if (name.Length == 0) { AccountName.Text = settings.Accounts[selected].Name; return; }
         settings.Accounts[selected].Name = name;
@@ -283,6 +338,7 @@ public partial class MainWindow : Window
 
     private void ToggleSound(object sender, RoutedEventArgs e)
     {
+        if (selected < 0) return;
         var session = sessions[selected];
         if (session?.Ready != true) return;
         session.Account.Muted = !session.Account.Muted;
@@ -293,6 +349,7 @@ public partial class MainWindow : Window
 
     private async void Reload(object sender, RoutedEventArgs e)
     {
+        if (selected < 0) return;
         var index = selected;
         try
         {

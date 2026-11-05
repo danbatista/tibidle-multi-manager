@@ -13,23 +13,26 @@
    <DockPanel Margin="12,6">
     <Image Source="Assets/logo-tibidle.png" Width="38" Height="38" Margin="0,0,12,0" DockPanel.Dock="Left" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" ToolTip="Tibidle"/>
     <Button x:Name="LayoutButton" DockPanel.Dock="Right" Click="ToggleLayout" Content="▦  4 telas" MinWidth="130" Margin="12,0,0,0" ToolTip="Alternar entre uma conta e quatro contas em grade"/>
+    <Button x:Name="AddTabButton" DockPanel.Dock="Right" Click="AddTab" Content="+" Margin="6,0,0,0" ToolTip="Adicionar aba (máximo de 4). Reutiliza o perfil salvo."/>
     <StackPanel x:Name="Tabs" Orientation="Horizontal"/>
    </DockPanel>
   </Border>
   <Border Grid.Row="1" Background="#101319" BorderBrush="#292D36" BorderThickness="0,0,0,1">
    <DockPanel Margin="14,7">
     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+     <Button x:Name="CloseTabButton" Click="CloseTab" Content="Fechar aba" Margin="0,0,8,0" ToolTip="Encerra esta página. O login salvo é preservado."/>
      <Button x:Name="SoundButton" Click="ToggleSound" Content="Som: ligado" Margin="0,0,8,0"/>
      <Button x:Name="ReloadButton" Click="Reload" Content="↻  Recarregar" ToolTip="Recarregar somente esta conta"/>
     </StackPanel>
     <StackPanel Orientation="Horizontal">
      <TextBlock Text="Nome da conta" VerticalAlignment="Center" Foreground="#9CA4B3" Margin="0,0,10,0"/>
      <TextBox x:Name="AccountName" Width="190" MaxLength="24" Padding="8,5" Background="#0C0E13" Foreground="#F0D797" BorderBrush="#655334" VerticalContentAlignment="Center" KeyDown="NameKeyDown"/>
-     <Button Content="Salvar nome" Click="SaveName" Margin="8,0,0,0"/>
+     <Button x:Name="SaveNameButton" Content="Salvar nome" Click="SaveName" Margin="8,0,0,0"/>
     </StackPanel>
    </DockPanel>
   </Border>
   <Grid Grid.Row="2" x:Name="BrowserHost"/>
+  <TextBlock x:Name="EmptyState" Grid.Row="2" Text="Nenhuma aba aberta. Clique em + para adicionar uma conta." HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#9CA4B3" FontSize="18" Visibility="Collapsed"/>
   <Border Grid.Row="3" Background="#14171E" Padding="14,4">
    <DockPanel>
     <TextBlock DockPanel.Dock="Right" Text="Ctrl+1–4  alternar contas" Foreground="#737D8E"/>

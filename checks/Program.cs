@@ -16,6 +16,33 @@ internal static class Program
             return;
         }
         var app = new Application();
+        if (args.Contains("--tabs"))
+        {
+            var root = Path.Combine(Path.GetTempPath(), "TibidleTabs-" + Guid.NewGuid().ToString("N"));
+            var store = new SettingsStore(root);
+            var original = store.Load();
+            original.Accounts[0].Name = "Saved profile";
+            original.Accounts[0].Muted = true;
+            store.Save(original);
+            var shell = new MainWindow(store);
+            var tabs = (StackPanel)shell.FindName("Tabs");
+            var close = (Button)shell.FindName("CloseTabButton");
+            var add = (Button)shell.FindName("AddTabButton");
+            Assert(tabs.Children.Count == 4 && !add.IsEnabled, "Existing installations retain four tabs and enforce limit");
+            close.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(tabs.Children.Count == 3 && store.Load().ActiveOrder.SequenceEqual(new[] { 1, 2, 3 }), "Closing removes only selected tab and persists it");
+            var reopened = new MainWindow(store);
+            Assert(((StackPanel)reopened.FindName("Tabs")).Children.Count == 3, "Reopening does not resurrect a closed tab");
+            reopened.Close();
+            for (var i = 0; i < 3; i++) close.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(tabs.Children.Count == 0 && store.Load().SelectedTab == -1, "All tabs can close and empty selection persists");
+            Assert(((TextBlock)shell.FindName("EmptyState")).Visibility == Visibility.Visible && !close.IsEnabled, "Empty window offers add without account actions");
+            for (var i = 0; i < 5; i++) add.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(tabs.Children.Count == 4 && store.Load().ActiveOrder.Count == 4 && !add.IsEnabled, "Adding cannot exceed four tabs");
+            Assert(store.Load().Accounts[0].Name == "Saved profile" && store.Load().Accounts[0].ProfileName == "Account1" && store.Load().Accounts[0].Muted, "Re-added account keeps profile identity and preferences");
+            shell.Close();
+            return;
+        }
         if (args.Contains("--preview"))
         {
             // Documentation preview: a fresh data directory, never the user's profiles.
@@ -218,6 +245,14 @@ internal static class Program
                 using (var output = File.Create(screenshot))
                     await views[0].CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, output);
                 Console.WriteLine("Screenshot: " + screenshot);
+                var closeTab = (Button)window.FindName("CloseTabButton");
+                closeTab.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert(tabs.Children.Count == 3 && !new SettingsStore(testRoot).Load().Accounts[1].Active, "Close disposes selected live account and persists inactive state");
+                Assert(((Grid)((Grid)host.Children[1]).Children[1]).Children.Count == 0, "Closed account releases browser control");
+                foreach (var i in new[] { 0, 2, 3 })
+                    Assert(await views[i].ExecuteScriptAsync("window.__layoutCheck") == $"\"retained-{i}\"", "Closing one account leaves other pages running");
+                ((Button)window.FindName("AddTabButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert(tabs.Children.Count == 4 && new SettingsStore(testRoot).Load().Accounts[1].Active, "Add restores available profile within four-tab limit");
                 Console.WriteLine("PASS: real game shell smoke check.");
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); Environment.ExitCode = 1; }

@@ -8,6 +8,7 @@ public sealed class AccountSettings
 {
     public string Name { get; set; } = "";
     public bool Muted { get; set; }
+    public bool Active { get; set; } = true;
     [JsonIgnore] public string ProfileName { get; internal set; } = "";
 }
 
@@ -17,6 +18,7 @@ public sealed class AppSettings
     public int SelectedTab { get; set; }
     public bool GridView { get; set; }
     public List<int> TabOrder { get; set; } = [0, 1, 2, 3];
+    [JsonIgnore] public List<int> ActiveOrder => TabOrder.Where(i => Accounts[i].Active).ToList();
 }
 
 public sealed class SettingsStore(string root)
@@ -48,6 +50,8 @@ public sealed class SettingsStore(string root)
         settings.SelectedTab = Math.Clamp(settings.SelectedTab, 0, 3);
         settings.TabOrder = (settings.TabOrder ?? []).Where(i => i >= 0 && i < 4)
             .Concat(Enumerable.Range(0, 4)).Distinct().ToList();
+        if (!settings.ActiveOrder.Contains(settings.SelectedTab))
+            settings.SelectedTab = settings.ActiveOrder.FirstOrDefault(-1);
         return settings;
     }
 

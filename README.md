@@ -15,6 +15,7 @@ Captura de uma instância de demonstração com perfis novos, sem contas conecta
 ## Recursos
 
 - Quatro abas com perfis de navegador separados.
+- Adicionar e fechar abas, mantendo no máximo quatro abertas e preservando os perfis salvos.
 - Logins e preferências locais persistentes entre aberturas.
 - Visualização normal ou quatro telas em uma grade 2 × 2.
 - Arraste das abas para reorganizar, com a mesma ordem na grade.
@@ -91,6 +92,7 @@ Resultado: `dist\TibidleMultiManager-win-x64.zip`. O script não lê a pasta dos
 4. **Ordem:** arraste uma aba sobre outra. A ordem é salva imediatamente e vale na grade da esquerda para a direita, de cima para baixo.
 5. **Seleção:** use a aba, o título do bloco ou clique no jogo. Som e Recarregar atuam na conta selecionada.
 6. **Atalhos:** `Ctrl+1` a `Ctrl+4` selecionam as posições atuais.
+7. **Fechar e adicionar:** selecione uma conta e clique em **Fechar aba** para encerrar sua página e liberar os recursos dela. Clique em **+** para adicionar uma aba, até o máximo de quatro. O perfil fechado é reutilizado com seu nome e login salvo; para trocar de conta nesse perfil, saia pelo próprio jogo. As abas abertas são lembradas ao reiniciar. É possível fechar todas.
 
 Fechar o aplicativo encerra as quatro páginas, mas mantém seus dados locais. Apenas uma instância do gerenciador pode ficar aberta por usuário do Windows.
 
@@ -124,6 +126,7 @@ Verificações disponíveis:
 dotnet run --project .\checks\IntegrationChecks.csproj
 dotnet run --project .\checks\IntegrationChecks.csproj -- --layout
 dotnet run --project .\checks\IntegrationChecks.csproj -- --order
+dotnet run --project .\checks\IntegrationChecks.csproj -- --tabs
 dotnet run --project .\checks\IntegrationChecks.csproj -- --check-data-root
 dotnet run --project .\checks\IntegrationChecks.csproj -- --game-smoke
 ```
